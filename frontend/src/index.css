@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* { font-family: 'Lato', sans-serif; }
+h1, h2, h3 { font-family: 'Playfair Display', serif; }
+
+body {
+  background-color: #fdfaf5;
+  color: #2c1810;
+}
+
+.btn-primary {
+  @apply bg-terracota-500 text-white font-bold py-3 px-6 rounded-xl transition-all duration-200 shadow-md;
+}
+.btn-primary:hover {
+  @apply bg-terracota-600 shadow-lg;
+}
+.btn-primary:active {
+  @apply scale-95;
+}
+
+.btn-secondary {
+  @apply border-2 border-terracota-500 text-terracota-600 font-bold py-3 px-6 rounded-xl transition-all duration-200;
+}
+.btn-secondary:hover {
+  @apply bg-terracota-50;
+}
+
+.card {
+  @apply bg-white rounded-2xl shadow-md transition-all duration-300;
+}
+.card:hover {
+  @apply shadow-xl;
+}
+
+.input-field {
+  @apply w-full border border-crema-300 rounded-xl px-4 py-3 text-carbon-800 bg-crema-50 placeholder-crema-400;
+}
+.input-field:focus {
+  @apply outline-none ring-2 ring-terracota-400;
+}
+
+.badge-pending   { @apply bg-yellow-100 text-yellow-800 text-xs font-semibold px-3 py-1 rounded-full; }
+.badge-confirmed { @apply bg-green-100 text-green-800 text-xs font-semibold px-3 py-1 rounded-full; }
+.badge-cancelled { @apply bg-red-100 text-red-800 text-xs font-semibold px-3 py-1 rounded-full; }
+.badge-completed { @apply bg-blue-100 text-blue-800 text-xs font-semibold px-3 py-1 rounded-full; }

@@ -47,9 +47,36 @@ const update = async (req, res) => {
     const restaurant = await Restaurant.update(req.params.id, req.body);
     res.json({ message: 'Restaurante actualizado', restaurant });
   } catch (err) {
+    console.error('Error update restaurante:', err.message)
     res.status(500).json({ error: 'Error al actualizar restaurante' });
   }
 };
+
+const toggleStatus = async (req, res) => {
+  try {
+
+    if (!(await Restaurant.isOwner(req.params.id, req.user.id))) {
+      return res.status(403).json({
+        error: 'No tienes permiso para modificar este restaurante.'
+      });
+    }
+
+    const restaurant = await Restaurant.toggleStatus(
+      req.params.id,
+      req.body.isActive
+    );
+
+    res.json({
+      message: 'Estado actualizado',
+      restaurant
+    });
+
+  } catch (err) {
+    res.status(500).json({
+      error: 'Error al actualizar estado'
+    });
+  }
+}
 
 const remove = async (req, res) => {
   try {
@@ -62,4 +89,4 @@ const remove = async (req, res) => {
   }
 };
 
-module.exports = { getAll, getById, getMyRestaurants, create, update, remove };
+module.exports = { getAll, getById, getMyRestaurants, create, update, toggleStatus, remove };

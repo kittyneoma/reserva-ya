@@ -12,15 +12,16 @@ const generateToken = (user) =>
  */
 const register = async (req, res) => {
     try {
-        const { email, password, firstName, lasName, phone, role } = req.body;
+        console.log('Body recibido:', req.body)
+        const { email, password, firstName, lastName, phone, role } = req.body;
 
-        if (!email || !password || !firstName || !lasName)
+        if (!email || !password || !firstName || !lastName)
             return res.status(400).json({ error: 'Email, contraseña, nombre y apellido son requeridos' });
 
         if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
             return res.status(400).json({ error: 'Formato de email inválido'});
 
-        if (password.lenght < 8)
+        if (password.length < 8)
             return res.status(400).json({ error: 'La contraseña debe tener al menos 8 caracteres'});
 
         if (await User.findByEmail(email))
@@ -32,7 +33,7 @@ const register = async (req, res) => {
         res.status(201).json({
             message: 'Usuario registrado exitosamente',
             token,
-            user: { id: user.id, email: user.email, firstName: user.first_name, lasName: user.last_name, role: user.role }
+            user: { id: user.id, email: user.email, firstName: user.first_name, lastName: user.last_name, role: user.role }
         });
     } catch (err) {
         console.error('Error en registro:', err);
@@ -73,7 +74,7 @@ const getProfile = async (req, res) => {
     try {
         const user = await User.findById(req.user.id);
         if (!user) return res.status(404).json({ error: 'Usuario no encontrado' });
-        res.json({ user: { id: user.id, email: user.email, firstName: user.first_name, lasName: user.last_name, phone: user.phone, role: user.role }});
+        res.json({ user: { id: user.id, email: user.email, firstName: user.first_name, lastName: user.last_name, phone: user.phone, role: user.role }});
     } catch (err) {
         res.status(500).json({ error: 'Error al obtener perfil '});
     }

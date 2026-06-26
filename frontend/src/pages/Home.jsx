@@ -19,7 +19,8 @@ export default function Home() {
               <span>tu momento.</span>
             </h1>
             <p className="hero-subtitle">
-              Descubre los mejores sabores de México y reserva tu lugar en segundos. Sin esperas, sin llamadas.
+              Descubre los mejores sabores de México y reserva tu lugar en segundos.<br />
+              Sin esperas, sin llamadas.
             </p>
             <div className="hero-actions">
               <button className="btn-primary btn-lg" onClick={() => navigate('/restaurants')}>

@@ -14,7 +14,7 @@ export default function RestaurantDetail() {
   const [menuItems, setMenuItems] = useState([])
   const [activeCategory, setActiveCategory] = useState('Todos')
   const [loading, setLoading] = useState(true)
-  const [form, setForm] = useState({ reservationDate: '', reservationTime: '', partySize: 2, specialRequests: '' })
+  const [form, setForm] = useState({ reservationDate: '', reservationTime: '', endTime: '', partySize: 2, specialRequests: '' })
   const [reserving, setReserving] = useState(false)
   const [msg, setMsg] = useState(null)
 
@@ -31,6 +31,29 @@ export default function RestaurantDetail() {
 
   const categories = ['Todos', ...new Set(menuItems.map(i => i.category))]
   const filtered = activeCategory === 'Todos' ? menuItems : menuItems.filter(i => i.category === activeCategory)
+
+  const [availability, setAvailability] = useState(null)
+  const [checking, setChecking] = useState(false)
+
+  const checkAvailability = async () => {
+    if (!form.reservationDate || !form.reservationTime || !form.endTime || !form.partySize) return
+    setChecking(true)
+    try {
+        const { data } = await axios.get(`/api/reservations/availability/${id}`, {
+            params: { 
+                date: form.reservationDate, 
+                time: form.reservationTime,
+                endTime: form.endTime, 
+                partySize: form.partySize 
+            }
+        })
+        setAvailability(data)
+    } catch {
+        setAvailability(null)
+    } finally {
+        setChecking(false)
+    }
+  }
 
   const handleReserve = async e => {
     e.preventDefault()
@@ -139,7 +162,7 @@ export default function RestaurantDetail() {
                 <label className="form-label">Fecha</label>
                 <input type="date" value={form.reservationDate}
                   min={new Date().toISOString().split('T')[0]}
-                  onChange={e => setForm({ ...form, reservationDate: e.target.value })}
+                  onChange={e => {setForm({ ...form, reservationDate: e.target.value }); setAvailability(null) }}
                   className="input-field" required />
               </div>
               <div className="form-group">
@@ -147,6 +170,12 @@ export default function RestaurantDetail() {
                 <input type="time" value={form.reservationTime}
                   onChange={e => setForm({ ...form, reservationTime: e.target.value })}
                   className="input-field" required />
+              </div>
+              <div className="form-group">
+                <label className="form-label">Hora de fin</label>
+                <input type="time" value={form.endTime}
+                    onChange={e => { setForm({ ...form, endTime: e.target.value }); setAvailability(null) }}
+                    className="input-field" required />
               </div>
               <div className="form-group">
                 <label className="form-label">Número de personas</label>
@@ -158,6 +187,27 @@ export default function RestaurantDetail() {
                   ))}
                 </select>
               </div>
+
+              {/* verifica disponibilidad */}
+              {form.reservationDate && form.reservationTime && form.endTime && form.partySize && (
+                <div className="form-group">
+                    <button type="button" onClick={checkAvailability} disabled={checking}
+                        className="btn-secondary btn-full">
+                            {checking ? 'Verificando...' : 'Verificar disponibilidad'}
+                        </button>
+                </div>
+              )}
+
+
+              {availability && (
+                <div className={`alert ${availability.available ? 'alert-success' : 'alert-error'}`}>
+                    {availability.available
+                        ? `Hay ${availability.availableTables.length} mesa(s) disponible(s) para ${form.partySize} personas`
+                        : 'No hay mesas disponibles para esta fecha, hora y numero de personas'
+                        }
+                </div>
+              )}
+
               <div className="form-group">
                 <label className="form-label">Solicitudes especiales</label>
                 <textarea value={form.specialRequests}

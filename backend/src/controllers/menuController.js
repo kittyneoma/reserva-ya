@@ -4,7 +4,7 @@ const Restaurant = require('../models/Restaurant');
 const getByRestaurant = async (req, res) => {
     try {
         const items = await MenuItem.findByRestaurant(req.params.restaurantId)
-        res.json({ count: items.lenght, MenuItems: items });
+        res.json({ count: items.lenght, menuItems: items });
     } catch (err) {
         res.status(500).json({ error: 'Error al obtener menú' });
     }

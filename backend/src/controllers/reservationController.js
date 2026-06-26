@@ -4,27 +4,76 @@ const Table = require('../models/Table');
 
 const createReservation = async (req, res) => {
   try {
-    const { restaurantId, tableId, reservationDate, reservationTime, partySize, specialRequests } = req.body;
-    if (!restaurantId || !reservationDate || !reservationTime || !partySize)
+    const { restaurantId, tableId, reservationDate, reservationTime, endTime, partySize, specialRequests } = req.body;
+    if (!restaurantId || !reservationDate || !reservationTime || !endTime || !partySize)
       return res.status(400).json({ error: 'Restaurante, fecha, hora y número de personas son requeridos' });
+
+    if (reservationTime >= endTime)
+        return res.status(400).json({ error: 'La hora de fin debe ser mayor a la hora de inicio' });
+
     if (new Date(`${reservationDate} ${reservationTime}`) < new Date())
       return res.status(400).json({ error: 'No se puede reservar en el pasado' });
 
+    const restaurant = await Restaurant.findById(restaurantId);
+
+    if (!restaurant) {
+        return res.status(404).json({
+            error: 'Restaurante no encontrado'
+        });
+    }
+
+    if (!restaurant.is_active) {
+        return res.status(400).json({
+            error: "Este restaurante no esta aceptando reservaciones."
+        });
+    }
+
+    const weekday = new Date(`${reservationDate}T12:00:00`)
+        .toLocaleDateString('en-US', {
+            weekday: 'long'
+        })
+        .toLowerCase();
+
+    const schedule = restaurant.operating_hours?.[weekday];
+
+    if (!schedule || schedule.closed) {
+        return res.status(400).json({
+            error: "El restaurante permanece cerrado ese día."
+        });
+    }
+
+    const reservationMinutes = toMinutes(reservationTime);
+    
+    const endMinutes = toMinutes(endTime);
+
+    const openMinutes = toMinutes(schedule.open);
+
+    const closeMinutes = toMinutes(schedule.close);
+
+    if (
+        reservationMinutes < openMinutes ||
+        endMinutes >= closeMinutes
+    ) {
+        return res.status(400).json({
+            error: `Las reservaciones solo se aceptan entre ${schedule.open} y ${schedule.close}.`
+        });
+    }
+
     let finalTableId = tableId;
     if (tableId) {
-      if (!(await Reservation.checkAvailability(tableId, reservationDate, reservationTime)))
+      if (!(await Reservation.checkAvailability(tableId, reservationDate, reservationTime, endTime)))
         return res.status(400).json({ error: 'La mesa no está disponible en ese horario' });
       const table = await Table.findById(tableId);
       if (table.capacity < partySize)
         return res.status(400).json({ error: `La mesa solo tiene capacidad para ${table.capacity} personas` });
     } else {
-      const available = await Reservation.getAvailableTables(restaurantId, reservationDate, reservationTime, partySize);
+      const available = await Reservation.getAvailableTables(restaurantId, reservationDate, reservationTime, endTime, partySize);
       if (!available.length)
         return res.status(400).json({ error: 'No hay mesas disponibles para esa fecha, hora y número de personas' });
       finalTableId = available[0].id;
     }
 
-    const reservation = await Reservation.create({ userId: req.user.id, restaurantId, tableId: finalTableId, reservationDate, reservationTime, partySize, specialRequests });
+    const reservation = await Reservation.create({ userId: req.user.id, restaurantId, tableId: finalTableId, reservationDate, reservationTime, endTime, partySize, specialRequests });
     res.status(201).json({ message: 'Reserva creada exitosamente', reservation });
   } catch (err) {
     console.error(err);
@@ -34,10 +83,10 @@ const createReservation = async (req, res) => {
 
 const getAvailability = async (req, res) => {
   try {
-    const { date, time, partySize } = req.query;
-    if (!date || !time || !partySize)
-      return res.status(400).json({ error: 'Fecha, hora y número de personas son requeridos' });
-    const tables = await Reservation.getAvailableTables(req.params.restaurantId, date, time, parseInt(partySize));
+    const { date, time, endTime, partySize } = req.query;
+    if (!date || !time || !endTime || !partySize)
+      return res.status(400).json({ error: 'Fecha, hora de inicio, hora de fin y número de personas son requeridos' });
+    const tables = await Reservation.getAvailableTables(req.params.restaurantId, date, time, endTime, parseInt(partySize));
     res.json({ available: tables.length > 0, availableTables: tables });
   } catch (err) {
     res.status(500).json({ error: 'Error al verificar disponibilidad' });
@@ -61,6 +110,7 @@ const getRestaurantReservations = async (req, res) => {
     const reservations = await Reservation.findByRestaurantId(req.params.restaurantId, req.query);
     res.json({ count: reservations.length, reservations });
   } catch (err) {
+    console.error('Error reservaciones restaurante:', err.message)
     res.status(500).json({ error: 'Error al obtener reservas' });
   }
 };
@@ -110,5 +160,11 @@ const cancelReservation = async (req, res) => {
     res.status(500).json({ error: 'Error al cancelar reserva' });
   }
 };
+
+function toMinutes(time) {
+    const [hours, minutes] = time.split(':').map(Number);
+
+    return hours * 60 + minutes;
+}
 
 module.exports = { createReservation, getAvailability, getMyReservations, getRestaurantReservations, getById, updateStatus, cancelReservation };

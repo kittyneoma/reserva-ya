@@ -69,7 +69,7 @@ export default function Register() {
             <div className="form-group">
               <label className="form-label">Contraseña</label>
               <input name="password" type="password" value={form.password} onChange={handleChange}
-                className="input-field" placeholder="Mínimo 6 caracteres" required />
+                className="input-field" placeholder="Mínimo 8 caracteres" required />
             </div>
 
             <div className="form-group">

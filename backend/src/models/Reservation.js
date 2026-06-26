@@ -2,11 +2,11 @@ const pool = require('../config/database');
 
 class Reservation {
   static async create(data) {
-    const { userId, restaurantId, tableId, reservationDate, reservationTime, partySize, specialRequests } = data;
+    const { userId, restaurantId, tableId, reservationDate, reservationTime, endTime, partySize, specialRequests } = data;
     const { rows } = await pool.query(
-      `INSERT INTO reservations (user_id, restaurant_id, table_id, reservation_date, reservation_time, party_size, special_requests)
-       VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
-      [userId, restaurantId, tableId, reservationDate, reservationTime, partySize, specialRequests]
+      `INSERT INTO reservations (user_id, restaurant_id, table_id, reservation_date, reservation_time, end_time, party_size, special_requests)
+       VALUES ($1,$2,$3,$4,$5,$6,$7, $8) RETURNING *`,
+      [userId, restaurantId, tableId, reservationDate, reservationTime, endTime, partySize, specialRequests]
     );
     return rows[0];
   }
@@ -53,23 +53,37 @@ class Reservation {
 
   static async checkAvailability(tableId, date, time) {
     const { rows } = await pool.query(
-      `SELECT id FROM reservations WHERE table_id=$1 AND reservation_date=$2
-       AND reservation_time=$3 AND status NOT IN ('cancelled')`, [tableId, date, time]
+      `SELECT id FROM reservations 
+      WHERE table_id=$1 AND reservation_date=$2
+      AND status NOT IN ('cancelled')
+      AND reservation_time < $4 AND end_time > $3`, 
+      [tableId, date, startTime, endTime]
     );
     return rows.length === 0;
   }
 
-  static async getAvailableTables(restaurantId, date, time, partySize) {
-    const { rows } = await pool.query(
-      `SELECT t.* FROM tables t WHERE t.restaurant_id=$1 AND t.is_active=true
-       AND t.capacity >= $2
-       AND t.id NOT IN (
-         SELECT table_id FROM reservations WHERE restaurant_id=$1
-         AND reservation_date=$3 AND reservation_time=$4 AND status NOT IN ('cancelled')
-       ) ORDER BY t.capacity ASC`, [restaurantId, partySize, date, time]
-    );
-    return rows;
-  }
+  static async getAvailableTables(restaurantId, date, startTime, endTime, partySize) {
+  const { rows } = await pool.query(
+    `SELECT t.*, 
+      (SELECT COUNT(*) FROM reservations 
+       WHERE table_id = t.id 
+       AND reservation_date = $3
+       AND status NOT IN ('cancelled')) as reservation_count
+     FROM tables t 
+     WHERE t.restaurant_id=$1 AND t.is_active=true
+     AND t.capacity >= $2
+     AND t.id NOT IN (
+       SELECT table_id FROM reservations 
+       WHERE restaurant_id=$1
+       AND reservation_date=$3
+       AND status NOT IN ('cancelled')
+       AND reservation_time < $5 AND end_time > $4
+     ) 
+     ORDER BY reservation_count ASC, t.capacity ASC`,
+    [restaurantId, partySize, date, startTime, endTime]
+  );
+  return rows;
+}
 
   static async updateStatus(id, status) {
     const { rows } = await pool.query(

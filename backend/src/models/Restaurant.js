@@ -9,7 +9,7 @@ class Restaurant {
   }
 
   static async findById(id) {
-    const { rows } = await pool.query('SELECT * FROM restaurants WHERE id = $1', [id]);
+    const { rows } = await pool.query('SELECT * FROM restaurants WHERE id = $1 AND is_active = true', [id]);
     return rows[0];
   }
 
@@ -32,15 +32,23 @@ class Restaurant {
   }
 
   static async update(id, data) {
-    const { name, description, address, city, state, cuisineType, priceRange, phone, email, operatingHours, isActive } = data;
+    const { name, description, address, city, state, cuisineType, priceRange, phone, email, operatingHours } = data;
     const { rows } = await pool.query(
       `UPDATE restaurants SET name=$1, description=$2, address=$3, city=$4, state=$5,
-       cuisine_type=$6, price_range=$7, phone=$8, email=$9, operating_hours=$10, is_active=$11, updated_at=NOW()
+       cuisine_type=$6, price_range=$7, phone=$8, email=$9, operating_hours=$10, updated_at=NOW()
        WHERE id=$12 RETURNING *`,
-      [name, description, address, city, state, cuisineType, priceRange, phone, email, JSON.stringify(operatingHours || {}), isActive, id]
+      [name, description, address, city, state, cuisineType, priceRange, phone, email, JSON.stringify(operatingHours || {}), id]
     );
     return rows[0];
   }
+
+  static async toggleStatus(id, isActive) {
+  const { rows } = await pool.query(`UPDATE restaurants SET is_active = $1, updated_at = NOW() WHERE id = $2 RETURNING *`,
+    [isActive, id]
+  );
+
+  return rows[0];
+}
 
   static async delete(id) {
     await pool.query('UPDATE restaurants SET is_active=false WHERE id=$1', [id]);

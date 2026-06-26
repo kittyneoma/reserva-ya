@@ -453,20 +453,30 @@ img {
     align-items: center;
     justify-content: center;
     gap: 8px;
-    background-color: transparent;
-    color: var(--btn-secondary-text);
+    background-color: var(--teal);
+    color: #ffffff;
     font-family: var(--font-body);
     font-weight: 700;
-    padding: 11px 24px;
+    padding: 12px 24px;
     border-radius: var(--radius-md);
-    border: 2px solid var(--btn-secondary-border);
+    border: none;
     cursor: pointer;
     transition: var(--transition);
+    box-shadow: 0 2px 8px rgba(33, 131, 128, 0.35);
     font-size: 0.95rem;
 }
 
 .btn-secondary:hover {
-    background-color: var(--btn-secondary-hover-bg);
+    background-color: #1a6663;
+    box-shadow: 0 4px 16px rgba(33, 131, 128, 0.35);
+    transform: translateY(-1px);
+}
+
+.btn-secondary:active  { transform: translateY(0); }
+.btn-secondary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
 }
 
 /* boton ghost */
@@ -1412,6 +1422,95 @@ img {
     gap: 16px;
 }
 
+/* para forzar colores en botones dentro del hero */
+.hero .btn-secondary {
+    color: #ffffff;
+    border: none;
+}
+
+.hero .btn-secondary:hover {
+    color: #ffffff;
+}
+
+.hero .btn-secondary:hover {
+    color: #ffffff;
+    background-color: #1a6663;
+}
+
+
+/* estado restaurante */
+
+.restaurant-status-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 24px;
+    flex-wrap: wrap;
+    margin-bottom: 32px;
+}
+
+.restaurant-status-info h3 {
+    margin-bottom: 6px;
+    color: var(--text-heading);
+}
+
+.restaurant-status-info p {
+    color: var(--text-muted);
+    font-size: .95rem;
+}
+
+.status-active {
+    color: var(--badge-confirmed-text);
+    font-weight: 700;
+}
+
+.status-inactive {
+    color: var(--badge-cancelled-text);
+    font-weight: 700;
+}
+
+/* switch */
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 62px;
+    height: 34px;
+}
+
+.switch input {
+    display: none;
+}
+
+.switch-slider {
+    position: absolute;
+    inset: 0;
+    background: #cfd8cd;
+    border-radius: 999px;
+    transition: .25s;
+    cursor: pointer;
+}
+
+.switch-slider::before {
+    content: "";
+    position: absolute;
+    width: 26px;
+    height: 26px;
+    left: 4px;
+    bottom: 4px;
+    border-radius: 50%;
+    background: white;
+    transition: .25s;
+    box-shadow: var(--shadow-md);
+}
+
+.switch input:checked + .switch-slider {
+    background: var(--teal);
+}
+
+.switch input:checked + .switch-slider::before {
+    transform: translateX(28px);
+}
 
 /* responsive */
 @media (max-width: 1024px) {

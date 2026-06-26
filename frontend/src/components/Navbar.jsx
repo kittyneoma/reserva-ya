@@ -8,7 +8,7 @@ export default function Navbar() {
   return (
     <nav className="navbar">
       <Link to="/" className="navbar-brand">
-        <span style={{ fontSize: '1.8rem' }}>🌮</span>
+        <span style={{ fontSize: '1.8rem' }}>🍽️</span>
 
         MesaYa
       </Link>

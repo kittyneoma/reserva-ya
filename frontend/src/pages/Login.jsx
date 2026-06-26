@@ -35,7 +35,7 @@ export default function Login() {
         <div className="form-card auth-card">
 
           <div className="auth-header">
-            <span className="auth-icon">🌮</span>
+            <span className="auth-icon">🍽️</span>
             <h1 className="auth-title">Bienvenido</h1>
             <p className="auth-subtitle">Inicia sesión para continuar</p>
           </div>
